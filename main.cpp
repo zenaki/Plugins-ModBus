@@ -25,13 +25,13 @@ int processArgs(int argc, char **argv)
                "  16 : Write Multiple Registers (Not yet)\n\n"
                " -h / --help\t\t\t\t: Print this help info\n\n"
                " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-               " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 2)"
+               " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 2)\n\n"
                " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol\n\n"
                " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
                " -s / --slave-id SLAVE_ID\t\t: Slave Id from ModBus Device\n\n"
                " -str / --start-address START_ADDRESS\t: Start Address for ModBus Protocol\n\n"
-               " -t / --type-conversion TYPE\t\t: Type will be BIN/HEX/DEC/FLOAT (DEFAULT BIN)"
+               " -t / --type-conversion TYPE\t\t: Type will be BIN/HEX/DEC/FLOAT (DEFAULT BIN)\n\n"
                " -tcp\t\t\t\t\t: ModBus TCP Mode\n\n"
                " -v / --version\t\t\t\t: Print version of plugins\n\n"
               );
@@ -53,20 +53,20 @@ int processArgs(int argc, char **argv)
                    "  16 : Write Multiple Registers (Not yet)\n\n"
                    " -h / --help\t\t\t\t: Print this help info\n\n"
                    " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-                   " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 2)"
+                   " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 2)\n\n"
                    " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol\n\n"
                    " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                    " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
                    " -s / --slave-id SLAVE_ID\t\t: Slave Id from ModBus Device\n\n"
                    " -str / --start-address START_ADDRESS\t: Start Address for ModBus Protocol\n\n"
-                   " -t / --type-conversion TYPE\t\t: Type will be BIN/HEX/DEC/FLOAT (DEFAULT BIN)"
+                   " -t / --type-conversion TYPE\t\t: Type will be BIN/HEX/DEC/FLOAT (DEFAULT BIN)\n\n"
                    " -tcp\t\t\t\t\t: ModBus TCP Mode\n\n"
                    " -v / --version\t\t\t\t: Print version of plugins\n\n"
                   );
             err = false;
         } else if (arg1 == QLatin1String("-v") ||
                  arg1 == QLatin1String("--version")) {
-            printf(" ModBus Plugins Version %s \n\n", VERSION);
+            printf(" ModBus Plugins Version: %s \nPT. DaunBiru Engiinering\nwww.daunbiru.com\n\n", VERSION);
             err = false;
         }
     } else  if (argc > 2) {
