@@ -20,7 +20,17 @@ public:
     worker();
     modbus_t *m_tcpModbus;
 
-    QStringList request_modbus(QString ip, int port, int slave_id, int function, int start_address, int num_of_coils, int num_of_byte, QString type_conversion);
+    QStringList request_modbus(
+            QString ip,
+            int port,
+            int slave_id,
+            int function,
+            int start_address,
+            int num_of_coils,
+            int num_of_byte,
+            QString type_conversion,
+            QString data_write
+            );
     void print_result(QStringList result);
 protected:
     void releaseTcpModbus();

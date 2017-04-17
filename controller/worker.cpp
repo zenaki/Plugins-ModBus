@@ -5,7 +5,17 @@ worker::worker()
 
 }
 
-QStringList worker::request_modbus(QString ip, int port, int slave_id, int function_code, int start_address, int num_of_coils, int num_of_byte, QString type_conversion)
+QStringList worker::request_modbus(
+        QString ip,
+        int port,
+        int slave_id,
+        int function_code,
+        int start_address,
+        int num_of_coils,
+        int num_of_byte,
+        QString type_conversion,
+        QString data_write
+        )
 {
     QStringList result;
     connectTcpModbus(ip, port);
@@ -49,42 +59,52 @@ QStringList worker::request_modbus(QString ip, int port, int slave_id, int funct
             ret = modbus_read_input_registers( m_tcpModbus, addr, num, dest16 );
             is16Bit = true;
             break;
-//        case MODBUS_FC_WRITE_SINGLE_COIL:
-//            ret = modbus_write_bit( m_tcpModbus, addr,
-//                    ui->regTable->item(0,2)->text().toInt(0,0)?1:0);
-//            writeAccess = true;
-//            num = 1;
-//            break;
-//        case MODBUS_FC_WRITE_SINGLE_REGISTER:
-//            ret = modbus_write_register( m_tcpModbus, addr,
-//                    ui->regTable->item(0,2)->text().toInt(0,0));
-//            writeAccess = true;
-//            num = 1;
-//            break;
-//        case MODBUS_FC_WRITE_MULTIPLE_COILS:
-//        {
-//            uint8_t * data = new uint8_t[num];
-//            for( int i = 0; i < num; ++i )
-//            {
-//                data[i] = ui->regTable->item(i,2)->text().toInt(0,0);
-//            }
-//            ret = modbus_write_bits( m_tcpModbus, addr, num, data );
-//            delete[] data;
-//            writeAccess = true;
-//            break;
-//        }
-//        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
-//        {
-//            uint16_t * data = new uint16_t[num];
-//            for( int i = 0; i < num; ++i )
-//            {
-//                data[i] = ui->regTable->item(i,2)->text().toInt(0,0);
-//            }
-//            ret = modbus_write_registers( m_tcpModbus, addr, num, data );
-//            delete[] data;
-//            writeAccess = true;
-//            break;
-//        }
+        case MODBUS_FC_WRITE_SINGLE_COIL:
+            ret = modbus_write_bit( m_tcpModbus, addr,
+                    data_write.toInt(0,0)?1:0);
+            writeAccess = true;
+            num = 1;
+            break;
+        case MODBUS_FC_WRITE_SINGLE_REGISTER:
+            ret = modbus_write_register( m_tcpModbus, addr,
+                    data_write.toInt(0,0));
+            writeAccess = true;
+            num = 1;
+            break;
+        case MODBUS_FC_WRITE_MULTIPLE_COILS:
+        {
+            uint8_t * data = new uint8_t[num];
+            QStringList dt = data_write.split("#");
+            for( int i = 0; i < num; ++i )
+            {
+                if (num <= dt.length()) {
+                    data[i] = dt.at(i).toInt(0,0);
+                } else {
+                    data[i] = 0;
+                }
+            }
+            ret = modbus_write_bits( m_tcpModbus, addr, num, data );
+            delete[] data;
+            writeAccess = true;
+            break;
+        }
+        case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+        {
+            uint16_t * data = new uint16_t[num];
+            QStringList dt = data_write.split("#");
+            for( int i = 0; i < num; ++i )
+            {
+                if (num <= dt.length()) {
+                    data[i] = dt.at(i).toInt(0,0);
+                } else {
+                    data[i] = 0;
+                }
+            }
+            ret = modbus_write_registers( m_tcpModbus, addr, num, data );
+            delete[] data;
+            writeAccess = true;
+            break;
+        }
         default:
             break;
     }
@@ -190,14 +210,17 @@ void worker::print_result(QStringList result)
         resultObject["monita"] = resultArray;
         QJsonDocument resultDocument(resultObject);
         QString strJson(resultDocument.toJson(QJsonDocument::Compact));
-        printf("%s\n", strJson.toLatin1().data());
+        printf("%s\n\n", strJson.toLatin1().data());
     } else {
         QString strJson("{\"" + result.at(0) + "\": \"" + result.at(1) + "\"}");
-        printf("%s\n", strJson.toLatin1().data());
+        printf("%s\n\n", strJson.toLatin1().data());
     }
 
-//    for (int i = 0; i < result.length(); i++) {
-//        printf("%i: %s\n", i, result.at(i).toLatin1().data());
+//    printf("\n\n");
+//    int cnt = 1;
+//    for (int i = 0; i < result.length(); i+=2) {
+//        printf("%i: %s - %s\n", cnt, result.at(i).toLatin1().data(), result.at(i+1).toLatin1().data());
+//        cnt++;
 //    }
 }
 
