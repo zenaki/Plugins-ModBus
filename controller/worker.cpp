@@ -109,12 +109,20 @@ QStringList worker::request_modbus(
             break;
     }
 
+    QJsonArray resultArray;
+    QJsonObject resultObject;
+
     if( ret == num  )
     {
         if( writeAccess )
         {
-//            printf("Monita::TcpModbus::Value successfully sent ..\n");
-//            QTimer::singleShot( 2000, this, SLOT( resetStatus() ) );
+            resultObject["monita"] = resultArray;
+            resultObject["success"] = "true";
+            QJsonDocument resultDocument(resultObject);
+            QString strJson(resultDocument.toJson(QJsonDocument::Compact));
+            printf("%s\n\n", strJson.toLatin1().data());
+            resultObject.remove("monita");
+            resultObject.remove("success");
         }
         else
         {
@@ -189,6 +197,13 @@ QStringList worker::request_modbus(
         } else {
             releaseTcpModbus();
         }
+        resultObject["monita"] = resultArray;
+        resultObject["success"] = "true";
+        QJsonDocument resultDocument(resultObject);
+        QString strJson(resultDocument.toJson(QJsonDocument::Compact));
+        printf("%s\n\n", strJson.toLatin1().data());
+        resultObject.remove("monita");
+        resultObject.remove("success");
     }
     return result;
 }
@@ -206,13 +221,15 @@ void worker::print_result(QStringList result)
             resultObject.remove("value");
             resultObject.remove("epochtime");
         }
-
         resultObject["monita"] = resultArray;
+        resultObject["success"] = "true";
         QJsonDocument resultDocument(resultObject);
         QString strJson(resultDocument.toJson(QJsonDocument::Compact));
         printf("%s\n\n", strJson.toLatin1().data());
+        resultObject.remove("monita");
+        resultObject.remove("success");
     } else {
-        QString strJson("{\"" + result.at(0) + "\": \"" + result.at(1) + "\"}");
+        QString strJson("{\"" + result.at(0) + "\": \"" + result.at(1) + "\", \"success\": \"false\"}");
         printf("%s\n\n", strJson.toLatin1().data());
     }
 

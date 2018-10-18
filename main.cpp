@@ -19,8 +19,8 @@ void processArgs(int argc, char **argv)
                "  2  : Read Discrete Inputs\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 2 -str 1000 -noc 20\n"
                "  3  : Read Holding Registers\n"
-               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -nob 2 -tc FLOAT\n"
-               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -nob 1 -tc DEC\n"
+               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 2 -tc FLOAT\n"
+               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 1 -tc DEC\n"
                "  4  : Read Input Registers\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 4 -str 1000 -noc 20\n"
                "  5  : Write Single Coil\n"
@@ -33,7 +33,7 @@ void processArgs(int argc, char **argv)
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n\n"
                " -h / --help\t\t\t\t: Print this help info\n\n"
                " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-               " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
+               " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol (DEFAULT 1)\n\n"
                " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
@@ -57,8 +57,8 @@ void processArgs(int argc, char **argv)
                    "  2  : Read Discrete Inputs\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 2 -str 1000 -noc 20\n"
                    "  3  : Read Holding Registers\n"
-                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -nob 2 -tc FLOAT\n"
-                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -nob 1 -tc DEC\n"
+                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 2 -tc FLOAT\n"
+                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 1 -tc DEC\n"
                    "  4  : Read Input Registers\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 4 -str 1000 -noc 20\n"
                    "  5  : Write Single Coil\n"
@@ -71,7 +71,7 @@ void processArgs(int argc, char **argv)
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n\n"
                    " -h / --help\t\t\t\t: Print this help info\n\n"
                    " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-                   " -nob / --num-of-bytes NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
+                   " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                    " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol (DEFAULT 1)\n\n"
                    " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                    " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
@@ -86,7 +86,13 @@ void processArgs(int argc, char **argv)
             err = false;
         } else if (arg1 == QLatin1String("-v") ||
                  arg1 == QLatin1String("--version")) {
-            printf(" ModBus Plugins Version: %s \nPT. DaunBiru Engiinering\nwww.daunbiru.com\n\n", VERSION);
+//            printf(" ModBus Plugins Version: %s \nPT. DaunBiru Engiinering\nwww.daunbiru.com\n\n", VERSION);
+            QString compilationTime = QString("%1 %2").arg(__DATE__).arg(__TIME__);
+            QString version = VERSION;
+            printf("Modbus Plugin Version:  %s\nPT. DaunBiru Engineering\nwww.daunbiru.com\n\n"
+                   "build on: %s (UTC+7)\n",
+                   version.toUtf8().data(),
+                   compilationTime.toUtf8().data());
             err = false;
         }
     } else  if (argc > 2) {
@@ -94,8 +100,8 @@ void processArgs(int argc, char **argv)
         int port = 0, slave_id = 0, function = 0, start_address = 0, num_of_coils = 0, num_of_bytes = 0;
         for (int i = 1; i < argc; i++) {
             QString arg1(argv[i]);
-            if (arg1 == QLatin1String("-nob") ||
-                arg1 == QLatin1String("--num-of-bytes")) {
+            if (arg1 == QLatin1String("-now") ||
+                arg1 == QLatin1String("--num-of-words")) {
                 num_of_bytes = QString::fromLocal8Bit(argv[i+1]).toInt();
                 if (num_of_bytes < 0 || num_of_bytes > 4) num_of_bytes = 0;
             } else if (arg1 == QLatin1String("-f") ||
@@ -154,9 +160,9 @@ void processArgs(int argc, char **argv)
             if (type_conversion.isEmpty()) type_conversion = "BIN";
             if (!ip.isEmpty() && port && slave_id) {
                 if (start_address >= 0) {
-                    if (function == 1 || function == 2 || function == 4) { // Read Coils, Read Discrete Input, Read Input Register
+                    if (function == 1 || function == 2) { // Read Coils, Read Discrete Input, Read Input Register
                         w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, 1, "BIN", ""));
-                    } else if (function == 3) { // Read Holding Register
+                    } else if (function == 3 || function == 4) { // Read Holding Register
                         w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, num_of_bytes, type_conversion, ""));
                     } else if (function == 5 || function == 6 || function == 15 || function == 16) { // Write Single Coil, Write Single Register, Write Multiple Coils, Write Multiple Registers
 //                        w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, 1, "BIN", data));
@@ -176,13 +182,14 @@ void processArgs(int argc, char **argv)
     if (err) {
         printf("{\"ERR\": \"Wrong Pluggins Commands\"}\n\n");
     }
-//    plugins/ModBus -tcp --ip-address 192.168.3.11 --port 502 --slave-id 21 --function-code 3 --start-address 1034 --num-of-coils 2 --num-of-bytes 2 --type-conversion FLOAT
+//    plugins/ModBus -tcp --ip-address 192.168.3.11 --port 502 --slave-id 21 --function-code 3 --start-address 1034 --num-of-coils 2 --num-of-words 2 --type-conversion FLOAT
 //    QStringList result = w.request_modbus("192.168.3.242", 502, 3, 3, 3203, 20, 4, "DEC", "");
 //    QStringList result = w.request_modbus("192.168.3.242", 502, 3, 3, 3027, 6, 2, "FLOAT", "");
 //    QStringList result = w.request_modbus("192.168.3.11", 502, 21, 3, 1034, 2, 2, "FLOAT", "");
 
 //    QStringList result = w.request_modbus("127.0.0.1", 502, 1, 1, 1000, 8, 1, "DEC", "");
 //    QStringList result = w.request_modbus("127.0.0.1", 502, 1, 15, 1000, 10, 1, "DEC", "1#0#1#0");
+//    QStringList result = w.request_modbus("192.168.3.250", 502, 1, 4, 0, 20, 2, "FLOAT", "");
 //    w.print_result(result);
 
 //    return 0;
