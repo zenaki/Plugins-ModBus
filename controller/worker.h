@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QDateTime>
 #include <QTimer>
+#include <QTcpSocket>
 
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -14,10 +15,11 @@
 
 #include "imodbus.h"
 
-class worker
+class worker : public QObject
 {
+    Q_OBJECT
 public:
-    worker();
+    explicit worker(QObject *parent = 0);
     modbus_t *m_tcpModbus;
 
     QStringList request_modbus(
@@ -32,9 +34,22 @@ public:
             QString data_write
             );
     void print_result(QStringList result);
+
+    QTcpSocket *socket;
+    int socket_count;
+    QStringList custom_request(
+            QString ip,
+            int port,
+            int slave_id,
+            int function,
+            QString type_conversion,
+            QString data_custom
+            );
 protected:
     void releaseTcpModbus();
     void connectTcpModbus(const QString &address, int portNbr);
+private:
+    bool writeData(QByteArray data);
 };
 
 #endif // WORKER_H

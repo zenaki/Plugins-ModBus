@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 
+//#include <QDebug>
 //#include "qtservice.h"
 
 #include "controller/worker.h"
@@ -12,29 +13,34 @@ void processArgs(int argc, char **argv)
 {
     bool err = true;
     if (argc < 2) {
-        printf(" -f / --function-code FUNCTION_CODE\t: ModBus Function Code\n"
+        printf(" -dc / --data-custom DATA_CUSTOM\t: ModBus Data Custom\n\n"
+               " -f / --function-code FUNCTION_CODE\t: ModBus Function Code\n"
                "  Function Code List :\n"
-               "  1  : Read Coils\n"
+               "  1   : Read Coils\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 1 -str 1000 -noc 20\n"
-               "  2  : Read Discrete Inputs\n"
+               "  2   : Read Discrete Inputs\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 2 -str 1000 -noc 20\n"
-               "  3  : Read Holding Registers\n"
+               "  3   : Read Holding Registers\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 2 -tc FLOAT\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 1 -tc DEC\n"
-               "  4  : Read Input Registers\n"
+               "  4   : Read Input Registers\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 4 -str 1000 -noc 20\n"
-               "  5  : Write Single Coil\n"
+               "  5   : Write Single Coil\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 5 -str 1000 -w 1\n"
-               "  6  : Write Single Register\n"
+               "  6   : Write Single Register\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 6 -str 1000 -w 1234\n"
-               "  15 : Write Multiple Coils\n"
+               "  15  : Write Multiple Coils\n"
                "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 15 -str 1000 -noc 4 -w 1#0#1#0\n"
-               "  16 : Write Multiple Registers\n"
-               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n\n"
+               "  16  : Write Multiple Registers\n"
+               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n"
+               "  100 : User Define (Write Multiple Register)\n"
+               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 100 -dc 05#10#08#28#00#02#04#00#00#00#01\n"
+               "  65 : User Define (Read Register)\n"
+               "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 65 -dc 05#01#08#28#00#02\n\n"
                " -h / --help\t\t\t\t: Print this help info\n\n"
                " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-               " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol (DEFAULT 1)\n\n"
+               " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
                " -s / --slave-id SLAVE_ID\t\t: Slave Id from ModBus Device\n\n"
@@ -50,29 +56,34 @@ void processArgs(int argc, char **argv)
         QString arg1(argv[1]);
         if (arg1 == QLatin1String("-h") ||
             arg1 == QLatin1String("--help")) {
-            printf(" -f / --function-code FUNCTION_CODE\t: ModBus Function Code\n"
+            printf(" -dc / --data-custom DATA_CUSTOM\t: ModBus Data Custom\n\n"
+                   " -f / --function-code FUNCTION_CODE\t: ModBus Function Code\n"
                    "  Function Code List :\n"
-                   "  1  : Read Coils\n"
+                   "  1   : Read Coils\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 1 -str 1000 -noc 20\n"
-                   "  2  : Read Discrete Inputs\n"
+                   "  2   : Read Discrete Inputs\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 2 -str 1000 -noc 20\n"
-                   "  3  : Read Holding Registers\n"
+                   "  3   : Read Holding Registers\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 2 -tc FLOAT\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 3 -str 1000 -noc 20 -now 1 -tc DEC\n"
-                   "  4  : Read Input Registers\n"
+                   "  4   : Read Input Registers\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 4 -str 1000 -noc 20\n"
-                   "  5  : Write Single Coil\n"
+                   "  5   : Write Single Coil\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 5 -str 1000 -w 1\n"
-                   "  6  : Write Single Register\n"
+                   "  6   : Write Single Register\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 6 -str 1000 -w 1234\n"
-                   "  15 : Write Multiple Coils\n"
+                   "  15  : Write Multiple Coils\n"
                    "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 15 -str 1000 -noc 4 -w 1#0#1#0\n"
-                   "  16 : Write Multiple Registers\n"
-                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n\n"
+                   "  16  : Write Multiple Registers\n"
+                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 16 -str 1000 -noc 4 -w 1234#2341#3412#4123\n"
+                   "  100 : User Define (Write Multiple Register)\n"
+                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 100 -dc 05#10#08#28#00#02#04#00#00#00#01\n"
+                   "  65 : User Define (Read Register)\n"
+                   "       ex : -tcp -ip 127.0.0.1 -p 502 -s 1 -f 65 -dc 05#01#08#28#00#02\n\n"
                    " -h / --help\t\t\t\t: Print this help info\n\n"
                    " -ip / --ip-address IP_ADDRESS\t\t: IP Address for ModBus TCP\n\n"
-                   " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                    " -noc / --num-of-coils NUM_OF_COILS\t: Num of Coils for ModBus Protocol (DEFAULT 1)\n\n"
+                   " -now / --num-of-words NUM_OF_BYTES\t: Num of Bytes for ModBus Protocol Conversion (MAX 4) (DEFAULT 1)\n\n"
                    " -p / --port PORT\t\t\t: Port for ModBus TCP (DEFAULT 502)\n\n"
                    " -rtu\t\t\t\t\t: ModBus RTU Mode (Not yet)\n\n"
                    " -s / --slave-id SLAVE_ID\t\t: Slave Id from ModBus Device\n\n"
@@ -96,14 +107,13 @@ void processArgs(int argc, char **argv)
             err = false;
         }
     } else  if (argc > 2) {
-        QString ip = "", type_conversion = "", mode = "", data = "";
+        QString ip = "", type_conversion = "", mode = "", data = "", data_custom = "";
         int port = 0, slave_id = 0, function = 0, start_address = 0, num_of_coils = 0, num_of_bytes = 0;
         for (int i = 1; i < argc; i++) {
             QString arg1(argv[i]);
-            if (arg1 == QLatin1String("-now") ||
-                arg1 == QLatin1String("--num-of-words")) {
-                num_of_bytes = QString::fromLocal8Bit(argv[i+1]).toInt();
-                if (num_of_bytes < 0 || num_of_bytes > 4) num_of_bytes = 0;
+            if (arg1 == QLatin1String("-dc") ||
+                arg1 == QLatin1String("--data-custom")) {
+                data_custom = argv[i+1];
             } else if (arg1 == QLatin1String("-f") ||
                        arg1 == QLatin1String("--function-code")) {
                 function = atoi(argv[i+1]);
@@ -116,6 +126,10 @@ void processArgs(int argc, char **argv)
                        arg1 == QLatin1String("--num-of-coils")) {
                 num_of_coils = atoi(argv[i+1]);
                 if (num_of_coils < 0) num_of_coils = 0;
+            } else if (arg1 == QLatin1String("-now") ||
+                       arg1 == QLatin1String("--num-of-words")) {
+                num_of_bytes = QString::fromLocal8Bit(argv[i+1]).toInt();
+                if (num_of_bytes < 0 || num_of_bytes > 4) num_of_bytes = 0;
             } else if (arg1 == QLatin1String("-p") ||
                        arg1 == QLatin1String("--port")) {
                 port = atoi(argv[i+1]);
@@ -166,7 +180,9 @@ void processArgs(int argc, char **argv)
                         w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, num_of_bytes, type_conversion, ""));
                     } else if (function == 5 || function == 6 || function == 15 || function == 16) { // Write Single Coil, Write Single Register, Write Multiple Coils, Write Multiple Registers
 //                        w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, 1, "BIN", data));
-                        w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, 1, "BIN", data);
+                        w.print_result(w.request_modbus(ip, port, slave_id, function, start_address, num_of_coils, 1, "BIN", data));
+                    } else if ((function == 100 || function == 65) && !data_custom.isEmpty()) { // Data Custom
+                        w.print_result(w.custom_request(ip, port, slave_id, function, type_conversion, data_custom));
                     }
                     err = false;
                 } else {
@@ -182,14 +198,18 @@ void processArgs(int argc, char **argv)
     if (err) {
         printf("{\"ERR\": \"Wrong Pluggins Commands\"}\n\n");
     }
-//    plugins/ModBus -tcp --ip-address 192.168.3.11 --port 502 --slave-id 21 --function-code 3 --start-address 1034 --num-of-coils 2 --num-of-words 2 --type-conversion FLOAT
+//    plugins/ModBus ./ModBus -tcp -ip 192.168.3.250 -p 502 -s 10 -f 3 -str 1024 -noc 8 -now 2 -tc HEX
+//    QStringList result = w.request_modbus("192.168.3.250", 502, 10, 3, 1024, 8, 2, "FLOAT", "");
+//    qDebug() << "";
 //    QStringList result = w.request_modbus("192.168.3.242", 502, 3, 3, 3203, 20, 4, "DEC", "");
 //    QStringList result = w.request_modbus("192.168.3.242", 502, 3, 3, 3027, 6, 2, "FLOAT", "");
 //    QStringList result = w.request_modbus("192.168.3.11", 502, 21, 3, 1034, 2, 2, "FLOAT", "");
 
 //    QStringList result = w.request_modbus("127.0.0.1", 502, 1, 1, 1000, 8, 1, "DEC", "");
 //    QStringList result = w.request_modbus("127.0.0.1", 502, 1, 15, 1000, 10, 1, "DEC", "1#0#1#0");
-//    QStringList result = w.request_modbus("192.168.3.250", 502, 1, 4, 0, 20, 2, "FLOAT", "");
+//    w.print_result(result);
+
+//    QStringList result = w.custom_request("127.0.0.1", 502, 1, 100, "DEC", "05#10#08#28#00#02#04#00#0A#01#02");
 //    w.print_result(result);
 
 //    return 0;

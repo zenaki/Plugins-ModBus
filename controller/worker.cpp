@@ -1,6 +1,6 @@
 #include "worker.h"
 
-worker::worker()
+worker::worker(QObject *parent) : QObject(parent)
 {
 
 }
@@ -173,6 +173,7 @@ QStringList worker::request_modbus(
                         data_temp2.append(data_temp1);
                     } else if (byte == 2) {
                         data_before = data;
+                        data_result.clear();
                     }
                 }
 
@@ -208,6 +209,117 @@ QStringList worker::request_modbus(
     return result;
 }
 
+QStringList worker::custom_request(
+        QString ip,
+        int port,
+        int slave_id,
+        int function,
+        QString type_conversion,
+        QString data_custom
+        )
+{
+    socket = new QTcpSocket(this);
+    socket->connectToHost(ip, port);
+
+    QStringList result;
+
+    if(socket->waitForConnected(1000)) {
+//        qDebug() << "Connected!";
+
+        socket_count++;
+        QByteArray BA;
+        /*Modbus Header*/
+        BA[0] = socket_count >> 8;
+        BA[1] = socket_count && 0xFF;
+        BA[2] = 0x00;
+        BA[3] = 0x00;
+        BA[4] = 0x00;
+        BA[5] = 0x08;
+        /*ID*/
+    //    BA[6] = 0x10;
+        BA[6] = slave_id;
+        /*Func Code*/
+    //    BA[7] = 0x05;
+        BA[7] = function;
+    //    /*Address*/
+    //    BA[8] = 0x00;
+    //    BA[9] = 0x00;
+    //    /*data*/
+    //    BA[10] = 0xFF;
+    //    BA[11] = 0x00;
+        QStringList data = data_custom.split("#");
+        for (int i = 0; i < data.length(); i++) {
+            bool bHex = false;
+            BA.append(data.at(i).toUInt(&bHex,16));
+        }
+
+//        qDebug() << BA.toHex();
+        writeData(BA);
+
+        if(socket->state() == QAbstractSocket::ConnectedState)
+        {
+            if(socket->waitForReadyRead() == false)
+            {
+                result.append("ERR");
+                result.append("No Data From the Source");
+                return result;
+            }
+    //        qDebug() << "Return";
+    //        qDebug() << socket->readAll().toHex();
+            QString data = socket->readAll().toHex();
+            QString id; id.append(data.at(12)).append(data.at(13));
+            QString fc; fc.append(data.at(14)).append(data.at(15));
+            QString slv_id; slv_id.append(data.at(16)).append(data.at(17));
+            QString slv_fc; slv_fc.append(data.at(18)).append(data.at(19));
+            QString dt_l; dt_l.append(data.at(20)).append(data.at(21));
+            QStringList dt;
+            for (int i = 22; i < data.size(); i+=4) {
+                QString temp; temp.append(data.at(i)).append(data.at(i+1)).append(data.at(i+2)).append(data.at(i+3));
+                dt.append(temp);
+            }
+
+            bool ok;
+            QJsonObject resultObjectMaster;
+            QJsonObject resultObjectSlave;
+            QJsonArray  resultArraySlave;
+            resultObjectMaster["id"] = QString::number(id.toLongLong(&ok, 16));
+            resultObjectMaster["fc"] = QString::number(fc.toLongLong(&ok, 16));
+            resultObjectSlave["id"] = QString::number(slv_id.toLongLong(&ok, 16));
+            resultObjectSlave["fc"] = QString::number(slv_fc.toLongLong(&ok, 16));
+            resultObjectSlave["dt_l"] = QString::number(dt_l.toLongLong(&ok, 16));
+//            qDebug() << type_conversion;
+            for (int i = 0; i < dt.length(); i++) {
+                if (type_conversion == "FLOAT") {
+                    unsigned int d_hex = dt.at(i).toUInt(&ok, 16);
+                    float data_float = (*(float *) &d_hex);
+                    dt[i] = QString::number(data_float, 'f', 5);
+                } else if (type_conversion == "DEC") {
+                    dt[i] = QString::number(dt.at(i).toLongLong(&ok, 16));
+                } else if (type_conversion == "BIN") {
+                    dt[i] = QString::number(dt.at(i).toUtf8().toLongLong(&ok, 16),2);
+                }
+                resultArraySlave.append(dt.at(i));
+            }
+            resultObjectSlave["dt"] = resultArraySlave;
+            resultObjectMaster["slv"] = resultObjectSlave;
+            QJsonDocument resultDocumentMaster(resultObjectMaster);
+            QString strJson(resultDocumentMaster.toJson(QJsonDocument::Compact));
+
+//            printf("%s\n\n", strJson.toLatin1().data());
+            result.append(strJson);
+            result.append(QString::number(QDateTime::currentMSecsSinceEpoch()));
+
+        }
+    } else {
+//        qDebug() << "Not connected!";
+        result.append("ERR");
+        result.append("Cannot Connect From the Source");
+    }
+
+//    socket->disconnectFromHost();
+    return result;
+}
+
 void worker::print_result(QStringList result)
 {
     QJsonArray resultArray;
@@ -215,7 +327,12 @@ void worker::print_result(QStringList result)
 
     if (result.at(0) != "ERR") {
         for (int i = 0; i < result.length(); i+=2) {
-            resultObject["value"] = result.at(i);
+            QJsonDocument jsonResult = QJsonDocument::fromJson(result.at(i).toUtf8());
+            if (!jsonResult.object().isEmpty()) {
+                resultObject["value"] = jsonResult.object();
+            } else {
+                resultObject["value"] = result.at(i);
+            }
             resultObject["epochtime"] = result.at(i+1);
             resultArray.append(resultObject);
             resultObject.remove("value");
@@ -238,7 +355,7 @@ void worker::print_result(QStringList result)
 //    for (int i = 0; i < result.length(); i+=2) {
 //        printf("%i: %s - %s\n", cnt, result.at(i).toLatin1().data(), result.at(i+1).toLatin1().data());
 //        cnt++;
-//    }
+    //    }
 }
 
 void worker::releaseTcpModbus()
@@ -258,5 +375,19 @@ void worker::connectTcpModbus(const QString &address, int portNbr)
     if ( modbus_connect( m_tcpModbus ) == -1 )
     {
         releaseTcpModbus();
+    }
+}
+
+bool worker::writeData(QByteArray data)
+{
+    if(socket->state() == QAbstractSocket::ConnectedState)
+    {
+//        socket->write(IntToArray(data.size())); //write size of data
+        socket->write(data); //write the data itself
+        return socket->waitForBytesWritten();
+    }
+    else
+    {
+        return false;
     }
 }
